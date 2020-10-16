@@ -1,0 +1,123 @@
+/*
+ * 1602_LCD_APIs.c
+ */
+
+#include "1602_LCD_APIs.h"
+
+void LCD_Send_Cmd(uint8_t cmd)
+{
+	uint8_t data_u, data_l;
+	uint8_t data_u_tx[2], data_l_tx[2];
+
+	data_u = (cmd & 0xF0);
+
+	data_l = ((cmd << 4) & 0xF0);
+
+	data_u_tx[0] = data_u | BACKLIGHT | PIN_EN;
+	data_u_tx[1] = data_u | BACKLIGHT;
+
+	data_l_tx[0] = data_l | BACKLIGHT | PIN_EN;
+	data_l_tx[1] = data_l | BACKLIGHT;
+
+	if(HAL_I2C_IsDeviceReady(&hi2c1, I2C_SLAVE_ADDRESS, 1, 10) == HAL_OK)
+		HAL_I2C_Master_Transmit(&hi2c1, I2C_SLAVE_ADDRESS, data_u_tx, 2, 100);
+
+	HAL_Delay(5);
+
+	if(HAL_I2C_IsDeviceReady(&hi2c1, I2C_SLAVE_ADDRESS, 1, 10) == HAL_OK)
+		HAL_I2C_Master_Transmit(&hi2c1, I2C_SLAVE_ADDRESS, data_l_tx, 2, 100);
+
+	HAL_Delay(5);
+}
+
+void LCD_Send_Data(uint8_t data)
+{
+	uint8_t data_u, data_l;
+	uint8_t data_u_tx[2], data_l_tx[2];
+
+	data_u = (data & 0xF0);
+
+	data_l = ((data << 4) & 0xF0);
+
+	data_u_tx[0] = data_u | BACKLIGHT | PIN_EN | PIN_RS;
+	data_u_tx[1] = data_u | BACKLIGHT | PIN_RS;
+
+	data_l_tx[0] = data_l | BACKLIGHT | PIN_EN | PIN_RS;
+	data_l_tx[1] = data_l | BACKLIGHT | PIN_RS;
+
+	if(HAL_I2C_IsDeviceReady(&hi2c1, I2C_SLAVE_ADDRESS, 1, 10) == HAL_OK)
+		HAL_I2C_Master_Transmit(&hi2c1, I2C_SLAVE_ADDRESS, data_u_tx, 2, 100);
+
+	HAL_Delay(5);
+
+	if(HAL_I2C_IsDeviceReady(&hi2c1, I2C_SLAVE_ADDRESS, 1, 10) == HAL_OK)
+		HAL_I2C_Master_Transmit(&hi2c1, I2C_SLAVE_ADDRESS, data_l_tx, 2, 100);
+
+	HAL_Delay(5);
+}
+
+void LCD_Init(void)
+{
+	LCD_Send_Cmd(LCD_FUNCTION_SET1);
+
+	LCD_Send_Cmd(LCD_FUNCTION_SET2);
+
+	LCD_Send_Cmd(LCD_4BIT_2LINE_MODE);
+
+	LCD_Send_Cmd(0x0C);
+
+	LCD_Send_Cmd(0x80);
+
+	LCD_Send_Cmd(LCD_CLEAR_DISPLAY);
+}
+
+void LCD_Send_String(char *str)
+{
+	while(*str)
+	{
+		LCD_Send_Data(*str++);
+	}
+}
+
+void LCD_Send_String_On_Line1(char *str)
+{
+	LCD_Send_Cmd(LCD_SET_ROW1_COL1);
+	LCD_Send_String(str);
+}
+
+void LCD_Send_String_On_Line2(char *str)
+{
+	LCD_Send_Cmd(LCD_SET_ROW2_COL1);
+	LCD_Send_String(str);
+}
+
+void LCD_Display_Long_Message(char *str)
+{
+	int i = 0, count = 1, j = 0;  //i for srting char count, j for no. of char in line 1 or 2 of lcd, count is for line number
+
+	LCD_Send_Cmd(LCD_CLEAR_DISPLAY);
+	LCD_Send_Cmd(LCD_SET_ROW1_COL1);
+
+	while (str[i] != '\0')
+	{
+		LCD_Send_Data(str[i]);
+
+		if(j>=15 && (count % 2 ==1))
+		{
+			LCD_Send_Cmd(LCD_SET_ROW2_COL1);
+			count++;
+		}
+		if(j>=31 && (count % 2 ==0))
+		{
+			LCD_Send_Cmd(LCD_CLEAR_DISPLAY);
+			LCD_Send_Cmd(LCD_SET_ROW1_COL1);
+			j = 0;
+			count++;
+		}
+
+		HAL_Delay(100);
+		i++;
+		j++;
+	}
+
+}

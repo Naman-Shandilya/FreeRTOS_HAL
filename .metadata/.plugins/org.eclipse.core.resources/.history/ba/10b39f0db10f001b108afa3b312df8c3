@@ -1,0 +1,8 @@
+/*
+ * 4x4_Keypad_APIs.c
+ */
+
+#include "4x4_Keypad_APIs.h"
+#include "stm32f4xx_hal.h"
+
+#define SET_ROW1_HIGH			HAL_GPIO_WritePin(KEYPAD_ROW_1_PIN_GPIO_Port, KEYPAD_ROW_1_PIN_Pin, GPIO_PIN_SET)

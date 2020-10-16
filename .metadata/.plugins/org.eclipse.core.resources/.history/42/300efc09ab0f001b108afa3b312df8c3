@@ -1,0 +1,7 @@
+/*
+ * 4x4_Keypad_APIs.c
+ */
+
+#include "4x4_Keypad_APIs.h"
+
+#define SET_ROW1_HIGH			HAL_GPIO_Write
